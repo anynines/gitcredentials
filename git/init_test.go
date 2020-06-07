@@ -7,10 +7,10 @@ import (
 	"github.com/sclevine/spec/report"
 )
 
-func TestUnitRvm(t *testing.T) {
+func TestUnitGitCredentials(t *testing.T) {
 	suite := spec.New("gitcredentials", spec.Report(report.Terminal{}))
-	// suite("Configuration", testConfiguration)
+	suite("Configuration", testConfiguration)
 	suite("BuildpackYMLParser", testBuildpackYMLParser)
-	// suite("Detect", testDetect)
+	suite("Detect", testDetect)
 	suite.Run(t)
 }

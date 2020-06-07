@@ -1,6 +1,7 @@
 package git
 
 import (
+	"errors"
 	"os"
 
 	yaml "gopkg.in/yaml.v2"
@@ -19,13 +20,13 @@ type BuildPackYMLCredential struct {
 
 // BuildPackYML represents the buildpack.yml file provided by a user / an app
 type BuildPackYML struct {
-	Credentials []BuildPackYMLCredential `yaml:"credentials"`
+	Credentials []BuildPackYMLCredential `yaml:"credentials,omitempty"`
 }
 
 // BuildpackYMLParse parses the buildpack.yml file
 func BuildpackYMLParse(path string) (BuildPackYML, error) {
 	var buildpack struct {
-		Gitcredentials BuildPackYML `yaml:"gitcredentials"`
+		Gitcredentials BuildPackYML `yaml:"gitcredentials,omitempty"`
 	}
 
 	file, err := os.Open(path)
@@ -39,6 +40,10 @@ func BuildpackYMLParse(path string) (BuildPackYML, error) {
 		if err != nil {
 			return BuildPackYML{}, err
 		}
+	}
+
+	if &buildpack.Gitcredentials == nil || len(buildpack.Gitcredentials.Credentials) == 0 {
+		return BuildPackYML{}, errors.New("Item gitcredentials.credentials not found in buildpack.yml")
 	}
 
 	return buildpack.Gitcredentials, nil

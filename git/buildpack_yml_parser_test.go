@@ -94,6 +94,18 @@ gitcredentials:
 					Expect(err).To(MatchError(ContainSubstring("could not find expected directive name")))
 				})
 			})
+
+			context("when the buildpack.yml file does not contain a gitcredentials map", func() {
+				it.Before(func() {
+					err := ioutil.WriteFile(path, []byte("---"), 0644)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				it("returns an error", func() {
+					_, err := git.BuildpackYMLParse(path)
+					Expect(err).To(MatchError(ContainSubstring("Item gitcredentials.credentials not found in buildpack.yml")))
+				})
+			})
 		})
 	})
 }
