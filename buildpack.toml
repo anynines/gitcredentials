@@ -8,6 +8,9 @@ api = "0.2"
 [metadata]
   include_files = ["bin/build","bin/detect","buildpack.toml"]
 
+  [metadata.configuration]
+    default_timeout = 3600
+
 [[stacks]]
   id = "io.buildpacks.stacks.bionic"
 
