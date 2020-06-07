@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"io"
 	"io/ioutil"
-	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/paketo-buildpacks/packit"
 	"github.com/paketo-buildpacks/packit/scribe"
@@ -13,8 +13,9 @@ import (
 
 // BuildEnvironment represents a build environment for this buildpack
 type BuildEnvironment struct {
-	Context packit.BuildContext
-	Logger  scribe.Logger
+	BuildPackYML BuildPackYML
+	Context      packit.BuildContext
+	Logger       scribe.Logger
 }
 
 // Build executes the main functionality if this buildpack participates in the
@@ -23,12 +24,18 @@ func Build(logger scribe.Logger) packit.BuildFunc {
 	return func(context packit.BuildContext) (packit.BuildResult, error) {
 		logger.Title("%s %s", context.BuildpackInfo.Name, context.BuildpackInfo.Version)
 
-		env := BuildEnvironment{
-			Context: context,
-			Logger:  logger,
+		buildPackYML, err := BuildpackYMLParse(filepath.Join(context.WorkingDir, "buildpack.yml"))
+		if err != nil {
+			return packit.BuildResult{}, err
 		}
 
-		err := env.Initialize()
+		env := BuildEnvironment{
+			BuildPackYML: buildPackYML,
+			Context:      context,
+			Logger:       logger,
+		}
+
+		err = env.Initialize()
 		if err != nil {
 			return packit.BuildResult{}, err
 		}
@@ -112,93 +119,116 @@ func (e BuildEnvironment) Initialize() error {
 func (e BuildEnvironment) Configure() error {
 	e.Logger.Process("Configuring git to use HTTPs for authentication")
 
-	// git config credential.https://example.com.username myusername
-	err := e.RunGitCommand([]string{
-		"git",
-		"config",
-		"--global",
-		"credential.https://github.com/.username",
-		os.Getenv("GIT_USERNAME"),
-	})
-	if err != nil {
-		return err
-	}
+	for _, credential := range e.BuildPackYML.Credentials {
+		credentialURL := credential.Protocol + "://" + credential.Host
+		if credential.URL != "" {
+			credentialURL = credential.URL
+		}
 
-	return e.RunGitCommand([]string{
-		"git",
-		"config",
-		"--global",
-		"url.https://github.com/.insteadOf",
-		"git@github.com:",
-	})
+		if credential.Path != "" {
+			credentialURL += credential.Path
+		} else {
+			credentialURL += "/"
+		}
+
+		credentialContext := "credential." + credentialURL + ".username"
+		err := e.RunGitCommand([]string{
+			"git",
+			"config",
+			"--global",
+			credentialContext,
+			credential.Username,
+		})
+		if err != nil {
+			return err
+		}
+
+		err = e.RunGitCommand([]string{
+			"git",
+			"config",
+			"--global",
+			"url." + credentialURL + ".insteadOf",
+			"git@" + credential.Host + ":",
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // StoreCredentials runs "git credential approve" to add credentials to the GIT
 // credential cache
 func (e BuildEnvironment) StoreCredentials() error {
 	e.Logger.Process("Adding credentials to GIT credentials cache")
-	cmd := exec.Command("git")
-	cmd.Args = []string{
-		"git",
-		"credential",
-		"approve",
-	}
 
-	stdin, err := cmd.StdinPipe()
-	if err != nil {
-		return err
-	}
+	for _, credential := range e.BuildPackYML.Credentials {
+		cmd := exec.Command("git")
+		cmd.Args = []string{
+			"git",
+			"credential",
+			"approve",
+		}
 
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return err
-	}
+		stdin, err := cmd.StdinPipe()
+		if err != nil {
+			return err
+		}
 
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return err
-	}
+		stdout, err := cmd.StdoutPipe()
+		if err != nil {
+			return err
+		}
 
-	go func() {
-		defer stdin.Close()
-		io.WriteString(stdin, "protocol=https\n")
-		io.WriteString(stdin, "host=github.com\n")
-		io.WriteString(stdin, "path=/\n")
-		io.WriteString(stdin, "username="+os.Getenv("GIT_USERNAME")+"\n")
-		io.WriteString(stdin, "password="+os.Getenv("GIT_TOKEN")+"\n")
-	}()
+		stderr, err := cmd.StderrPipe()
+		if err != nil {
+			return err
+		}
 
-	err = cmd.Start()
-	if err != nil {
-		return err
-	}
+		go func() {
+			defer stdin.Close()
+			io.WriteString(stdin, "protocol="+credential.Protocol+"\n")
+			io.WriteString(stdin, "host="+credential.Host+"\n")
+			io.WriteString(stdin, "path="+credential.Path+"\n")
+			io.WriteString(stdin, "username="+credential.Username+"\n")
+			io.WriteString(stdin, "password="+credential.Password+"\n")
+			if credential.URL != "" {
+				io.WriteString(stdin, "url="+credential.URL+"\n")
+			}
+		}()
 
-	if err != nil {
-		e.Logger.Subprocess("Adding credentials failed")
-		e.Logger.Subprocess("Error status code: %s", err.Error())
+		err = cmd.Start()
+		if err != nil {
+			return err
+		}
 
-		var stderrBytes []byte
-		stderrBytes, err = ioutil.ReadAll(stderr)
-		if err == nil && len(stderrBytes) > 0 {
-			e.Logger.Subprocess("Command stderr: %s", string(stderrBytes))
+		if err != nil {
+			e.Logger.Subprocess("Adding credentials failed")
+			e.Logger.Subprocess("Error status code: %s", err.Error())
+
+			var stderrBytes []byte
+			stderrBytes, err = ioutil.ReadAll(stderr)
+			if err == nil && len(stderrBytes) > 0 {
+				e.Logger.Subprocess("Command stderr: %s", string(stderrBytes))
+			}
+			e.Logger.Break()
+			return err
+		}
+
+		e.Logger.Subprocess("Adding credentials succeeded")
+
+		var stdoutBytes []byte
+		stdoutBytes, err = ioutil.ReadAll(stdout)
+		if err == nil && len(stdoutBytes) > 0 {
+			e.Logger.Subprocess("Command output: %s", string(stdoutBytes))
+		}
+
+		err = cmd.Wait()
+		if err != nil {
+			return err
 		}
 		e.Logger.Break()
-		return err
 	}
-
-	e.Logger.Subprocess("Adding credentials succeeded")
-
-	var stdoutBytes []byte
-	stdoutBytes, err = ioutil.ReadAll(stdout)
-	if err == nil && len(stdoutBytes) > 0 {
-		e.Logger.Subprocess("Command output: %s", string(stdoutBytes))
-	}
-
-	err = cmd.Wait()
-	if err != nil {
-		return err
-	}
-	e.Logger.Break()
 
 	return nil
 }
