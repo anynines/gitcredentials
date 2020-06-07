@@ -5,6 +5,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/avarteqgmbh/gitcredentials/git"
+
 	"github.com/sclevine/spec"
 
 	. "github.com/onsi/gomega"
@@ -13,9 +15,7 @@ import (
 func testBuildpackYMLParser(t *testing.T, context spec.G, it spec.S) {
 	var (
 		Expect = NewWithT(t).Expect
-
 		path   string
-		parser git.BuildpackYMLParser
 	)
 
 	it.Before(func() {
@@ -24,14 +24,17 @@ func testBuildpackYMLParser(t *testing.T, context spec.G, it spec.S) {
 		defer file.Close()
 
 		_, err = file.WriteString(`---
-rvm:
-  ruby_version: 2.6.1
+gitcredentials:
+  credentials:
+    - protocol: https
+      host: example.com
+      path: /foo.git
+      username: username
+      password: password
+      url: https://example.com
 `)
 		Expect(err).NotTo(HaveOccurred())
-
 		path = file.Name()
-
-		parser = git.NewBuildpackYMLParser()
 	})
 
 	it.After(func() {
@@ -39,43 +42,28 @@ rvm:
 	})
 
 	context("Parse", func() {
-		it.Before(func() {
-			err := ioutil.WriteFile(path, []byte(`---
-rvm:
-  rvm_version: 1.29.9
-  ruby_version: 2.6.1
-  node_version: 10.*
-  require_node: false
-`), 0644)
-			Expect(err).NotTo(HaveOccurred())
-		})
-
 		it("parses a buildpack.yml file", func() {
-			configData, err := git.BuildpackYMLParse(path)
+			gitcredentials, err := git.BuildpackYMLParse(path)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(configData.RvmVersion).To(Equal("1.29.9"))
-			Expect(configData.RubyVersion).To(Equal("2.6.1"))
-			Expect(configData.NodeVersion).To(Equal("10.*"))
-			Expect(configData.RequireNode).To(BeFalse())
+			Expect(gitcredentials.Credentials[0].Protocol).To(Equal("https"))
+			Expect(gitcredentials.Credentials[0].Host).To(Equal("example.com"))
+			Expect(gitcredentials.Credentials[0].Path).To(Equal("/foo.git"))
+			Expect(gitcredentials.Credentials[0].Username).To(Equal("username"))
+			Expect(gitcredentials.Credentials[0].Password).To(Equal("password"))
+			Expect(gitcredentials.Credentials[0].URL).To(Equal("https://example.com"))
 		})
 	})
 
-	context("ParseVersion", func() {
-		it("parses the node version from a buildpack.yml file", func() {
-			version, err := parser.ParseVersion(path)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(version).To(Equal("2.6.1"))
-		})
-
+	context("Parsing errors", func() {
 		context("when the buildpack.yml file does not exist", func() {
 			it.Before(func() {
 				Expect(os.Remove(path)).To(Succeed())
 			})
 
-			it("returns an empty version", func() {
-				version, err := parser.ParseVersion(path)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(version).To(BeEmpty())
+			it("returns an empty YAML structure", func() {
+				gitcredentials, err := git.BuildpackYMLParse(path)
+				Expect(err).To(HaveOccurred())
+				Expect(gitcredentials).To(Equal(git.BuildPackYML{Credentials: nil}))
 			})
 		})
 
@@ -90,7 +78,7 @@ rvm:
 				})
 
 				it("returns an error", func() {
-					_, err := parser.ParseVersion(path)
+					_, err := git.BuildpackYMLParse(path)
 					Expect(err).To(MatchError(ContainSubstring("permission denied")))
 				})
 			})
@@ -102,7 +90,7 @@ rvm:
 				})
 
 				it("returns an error", func() {
-					_, err := parser.ParseVersion(path)
+					_, err := git.BuildpackYMLParse(path)
 					Expect(err).To(MatchError(ContainSubstring("could not find expected directive name")))
 				})
 			})

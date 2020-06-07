@@ -11,6 +11,5 @@ import (
 
 func main() {
 	logger := scribe.NewLogger(os.Stdout)
-	buildpackYMLParser := git.NewBuildpackYMLParser()
-	packit.Detect(git.Detect(logger, buildpackYMLParser))
+	packit.Detect(git.Detect(logger))
 }

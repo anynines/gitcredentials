@@ -13,21 +13,19 @@ import (
 
 // BuildEnvironment represents a build environment for this buildpack
 type BuildEnvironment struct {
-	BuildpackYMLParser BuildpackYMLParser
-	Context            packit.BuildContext
-	Logger             scribe.Logger
+	Context packit.BuildContext
+	Logger  scribe.Logger
 }
 
 // Build executes the main functionality if this buildpack participates in the
 // build plan
-func Build(logger scribe.Logger, buildpackYMLParser BuildpackYMLParser) packit.BuildFunc {
+func Build(logger scribe.Logger) packit.BuildFunc {
 	return func(context packit.BuildContext) (packit.BuildResult, error) {
 		logger.Title("%s %s", context.BuildpackInfo.Name, context.BuildpackInfo.Version)
 
 		env := BuildEnvironment{
-			BuildpackYMLParser: buildpackYMLParser,
-			Context:            context,
-			Logger:             logger,
+			Context: context,
+			Logger:  logger,
 		}
 
 		err := env.Initialize()

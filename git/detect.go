@@ -9,7 +9,7 @@ import (
 )
 
 // Detect determines whether this buildpack should participate
-func Detect(logger scribe.Logger, buildpackYMLParser BuildpackYMLParser) packit.DetectFunc {
+func Detect(logger scribe.Logger) packit.DetectFunc {
 	return func(context packit.DetectContext) (packit.DetectResult, error) {
 		logger.Title("%s %s", context.BuildpackInfo.Name, context.BuildpackInfo.Version)
 
