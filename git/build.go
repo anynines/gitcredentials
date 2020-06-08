@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/paketo-buildpacks/packit"
 	"github.com/paketo-buildpacks/packit/scribe"
@@ -15,9 +16,10 @@ import (
 
 // BuildEnvironment represents a build environment for this buildpack
 type BuildEnvironment struct {
-	BuildPackYML BuildPackYML
-	Context      packit.BuildContext
-	Logger       scribe.Logger
+	BuildPackYML  BuildPackYML
+	Configuration Configuration
+	Context       packit.BuildContext
+	Logger        scribe.Logger
 }
 
 // Build executes the main functionality if this buildpack participates in the
@@ -25,6 +27,11 @@ type BuildEnvironment struct {
 func Build(logger scribe.Logger) packit.BuildFunc {
 	return func(context packit.BuildContext) (packit.BuildResult, error) {
 		logger.Title("%s %s", context.BuildpackInfo.Name, context.BuildpackInfo.Version)
+
+		configuration, err := ReadConfiguration(context.CNBPath)
+		if err != nil {
+			return packit.BuildResult{}, err
+		}
 
 		envCredentials := GitCredential{}
 		gitUserName, userNameExists := os.LookupEnv("GIT_CREDENTIALS_USERNAME")
@@ -35,11 +42,6 @@ func Build(logger scribe.Logger) packit.BuildFunc {
 			envCredentials = GitCredential{
 				Username: gitUserName,
 				Password: gitPassword,
-			}
-
-			configuration, err := ReadConfiguration(context.CNBPath)
-			if err != nil {
-				return packit.BuildResult{}, err
 			}
 
 			gitProtocol, protocolExists := os.LookupEnv("GIT_CREDENTIALS_PROTOCOL")
@@ -85,9 +87,10 @@ func Build(logger scribe.Logger) packit.BuildFunc {
 		}
 
 		env := BuildEnvironment{
-			BuildPackYML: buildPackYML,
-			Context:      context,
-			Logger:       logger,
+			BuildPackYML:  buildPackYML,
+			Configuration: configuration,
+			Context:       context,
+			Logger:        logger,
 		}
 
 		err = env.Initialize()
@@ -160,12 +163,20 @@ func (e BuildEnvironment) RunGitCommand(args []string) error {
 // memory exclusively
 func (e BuildEnvironment) Initialize() error {
 	e.Logger.Process("Initializing GIT credentials cache")
+	defaultTimeout := "3600"
+	if len(e.Configuration.DefaultTimeout) > 0 {
+		defaultTimeout = e.Configuration.DefaultTimeout
+	}
 	return e.RunGitCommand([]string{
 		"git",
 		"config",
 		"--global",
 		"credential.helper",
-		"cache",
+		strings.Join([]string{
+			"cache",
+			"--timeout",
+			string(defaultTimeout),
+		}, " "),
 	})
 }
 

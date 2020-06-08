@@ -6,7 +6,7 @@ GIT credentials is a Cloud Native Buildpack that allows an app developer to supp
 
 A user of this buildpack can supply a file called `buildpack.yml` in the root directory of the application or supply environment variables to specify credentials.
 
-1. If the `gitcredentials.credentials` array is found in `buildpack.yml` or particular environment variables exist, the [GIT credential cache](https://git-scm.com/docs/gitcredentials) will be initialized by this buildpack. The GIT credential cache stores credentials [exclusively in memory](https://git-scm.com/book/en/v2/Git-Tools-Credential-Storage) (and forgets them after a default timeout of 15 minutes).
+1. If the `gitcredentials.credentials` array is found in `buildpack.yml` or particular environment variables exist, the [GIT credential cache](https://git-scm.com/docs/gitcredentials) will be initialized by this buildpack. The GIT credential cache stores credentials [exclusively in memory](https://git-scm.com/book/en/v2/Git-Tools-Credential-Storage) (and forgets them after a configurable timeout has expired).
 1. In addition to that, it sets a [credential context](https://git-scm.com/docs/gitcredentials#_credential_contexts) so that GIT knows which credentials to use for which protocol, host and path.
 1. Lastly, it sets [`url.<base>.insteadOf`](https://git-scm.com/docs/git-config#Documentation/git-config.txt-urlltbasegtinsteadOf) to direct GIT to authenticate using HTTPs instead of SSH. Doing so has the benefit that the provided password can be a [GitHub personal access token](https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line) which supports limiting access to users supplying a personal access token to certain scopes (in particular you can set the scope for the token to "read-only").
 
@@ -49,11 +49,22 @@ Required:
 
 The environment variable names correspond to the fields available to [git-credential](https://git-scm.com/docs/git-credential). The semantics of the fields are the same.
 
-If a variable is not specified by the user then the corresponding value of the corresponding default variable specified in [buildpack.toml](./buildpack.toml) will be used. E.g. `$GIT_CREDENTIALS_PROTOCOL` is set to `https` if not overwritten by the user.
+If a variable is not required and not specified by the user then the value of the corresponding default variable specified in [buildpack.toml](./buildpack.toml) will be used. E.g. `$GIT_CREDENTIALS_PROTOCOL` is set to `https` if the user does not specify `$GIT_CREDENTIALS_PROTOCOL` themselves.
 
 #### NOTE
 
 The variables `$GIT_CREDENTIALS_USERNAME` and `$GIT_CREDENTIALS_PASSWORD` are mandatory and have to be specified by the user.
+
+## How to configure this buildpack
+
+Configuration for this build package can be specfied in [buildpack.toml](./buildpack.toml). The following configuration fields are supported in `[metadata.configuration]`:
+
+|  Name  |  Description  |  Default value  |
+|------------|---------------|-----------|
+|  default_timeout  |  The default timeout for the GIT credential cache in seconds, set to "3600" to support builds which run longer  |  "3600"  |
+|  default_protocol  |  The default protocol. Currently only https is supported. Used as value for `$GIT_CREDENTIALS_PROTOCOL` if the environment variable is not specified  |  "https"  |
+|  default_host  |  The default host (don't we all use GitHub ;-)). Used as value for `$GIT_CREDENTIALS_HOST` if the environment variable is not specified |  "github.com"  |
+|  default_path  |  The default path. The path variable allows you to authenticate to different repos using different Git credential. Used as value for `$GIT_CREDENTIALS_PATH` if the environment variable is not specified  |  "/"  |
 
 ## Requirements
 
@@ -62,7 +73,6 @@ The variables `$GIT_CREDENTIALS_USERNAME` and `$GIT_CREDENTIALS_PASSWORD` are ma
 ## TODO
 
 1. Support for SSH as prococol.
-1. Make the GIT credential cache timeout configurable via the buildpack.toml to allow for builds which take longer than 15 minutes.
 1. More tests are required, particularly for the build phase.
 
 ## Authors

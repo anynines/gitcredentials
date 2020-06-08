@@ -59,7 +59,7 @@ func testConfiguration(t *testing.T, context spec.G, it spec.S) {
 			configuration, err := git.ReadConfiguration(cnbDir)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(configuration).To(Equal(git.Configuration{
-				DefaultTimeout:  3600,
+				DefaultTimeout:  "3600",
 				DefaultProcotol: "https",
 				DefaultHost:     "github.com",
 				DefaultPath:     "/",

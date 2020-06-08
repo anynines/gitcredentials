@@ -10,7 +10,7 @@ import (
 // Configuration represents this buildpack's configuration read from a table
 // named "configuration"
 type Configuration struct {
-	DefaultTimeout  int    `toml:"default_timeout"`
+	DefaultTimeout  string `toml:"default_timeout"`
 	DefaultProcotol string `toml:"default_protocol"`
 	DefaultHost     string `toml:"default_host"`
 	DefaultPath     string `toml:"default_path"`

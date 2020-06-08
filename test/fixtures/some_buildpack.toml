@@ -6,7 +6,7 @@ api = "0.2"
   version = "some-version"
 
   [metadata.configuration]
-    default_timeout = 3600
+    default_timeout = "3600"
     default_protocol = "https"
     default_host = "github.com"
     default_path = "/"

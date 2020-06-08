@@ -3,13 +3,13 @@ api = "0.2"
 [buildpack]
   id = "com.anynines.buildpacks.gitcredentials"
   name = "GIT credentials"
-  version = "0.0.4"
+  version = "0.0.5"
 
 [metadata]
   include_files = ["bin/build","bin/detect","buildpack.toml"]
 
   [metadata.configuration]
-    default_timeout = 3600
+    default_timeout = "3600"
     default_protocol = "https"
     default_host = "github.com"
     default_path = "/"
