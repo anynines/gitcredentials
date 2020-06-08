@@ -14,16 +14,7 @@ func Detect(logger scribe.Logger) packit.DetectFunc {
 	return func(context packit.DetectContext) (packit.DetectResult, error) {
 		logger.Title("%s %s", context.BuildpackInfo.Name, context.BuildpackInfo.Version)
 
-		_, err := BuildpackYMLParse(filepath.Join(context.WorkingDir, "buildpack.yml"))
-		if err != nil && os.IsNotExist(err) {
-			return packit.DetectResult{}, err
-		}
-
-		if err != nil {
-			return packit.DetectResult{}, errors.New("GIT credentials cannot be found in buildpack.yml")
-		}
-
-		return packit.DetectResult{
+		cnbResult := packit.DetectResult{
 			Plan: packit.BuildPlan{
 				Provides: []packit.BuildPlanProvision{
 					{Name: "gitcredentials"},
@@ -34,27 +25,37 @@ func Detect(logger scribe.Logger) packit.DetectFunc {
 					},
 				},
 			},
-		}, nil
+		}
 
-		// gitUserName, userNameExists := os.LookupEnv("GIT_USERNAME")
-		// gitToken, tokenExists := os.LookupEnv("GIT_TOKEN")
-		// if userNameExists && len(gitUserName) > 0 && tokenExists && len(gitToken) > 0 {
-		// 	logger.Process("Found environment variables GIT_USERNAME and GIT_TOKEN")
+		gitUserName, userNameExists := os.LookupEnv("GIT_CREDENTIALS_USERNAME")
+		gitPassword, passwordExists := os.LookupEnv("GIT_CREDENTIALS_PASSWORD")
+		if userNameExists && len(gitUserName) > 0 && passwordExists && len(gitPassword) > 0 {
+			logger.Process("Using environment variables GIT_CREDENTIALS_USERNAME and GIT_CREDENTIALS_PASSWORD")
 
-		// 	return packit.DetectResult{
-		// 		Plan: packit.BuildPlan{
-		// 			Provides: []packit.BuildPlanProvision{
-		// 				{Name: "gitcredentials"},
-		// 			},
-		// 			Requires: []packit.BuildPlanRequirement{
-		// 				{
-		// 					Name: "gitcredentials",
-		// 				},
-		// 			},
-		// 		},
-		// 	}, nil
-		// }
+			configuration, err := ReadConfiguration(context.CNBPath)
+			if err != nil {
+				return packit.DetectResult{}, err
+			}
 
-		// return packit.DetectResult{}, errors.New("Environment variables GIT_USERNAME and GIT_TOKEN not found")
+			gitProtocol, protocolExists := os.LookupEnv("GIT_CREDENTIALS_PROTOCOL")
+			protocolDefined := (protocolExists && len(gitProtocol) > 0) || len(configuration.DefaultProcotol) > 0
+
+			gitHost, hostExists := os.LookupEnv("GIT_CREDENTIALS_HOST")
+			hostDefined := (hostExists && len(gitHost) > 0) || len(configuration.DefaultHost) > 0
+
+			gitPath, pathExists := os.LookupEnv("GIT_CREDENTIALS_PATH")
+			pathDefined := (pathExists && len(gitPath) > 0) || len(configuration.DefaultPath) > 0
+
+			if protocolDefined && hostDefined && pathDefined {
+				return cnbResult, nil
+			}
+		}
+
+		_, err := BuildpackYMLParse(filepath.Join(context.WorkingDir, "buildpack.yml"))
+		if err == nil {
+			return cnbResult, nil
+		}
+
+		return packit.DetectResult{}, errors.New("Could not find GIT credentials in environment or in buildpack.yml")
 	}
 }

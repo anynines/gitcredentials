@@ -2,8 +2,10 @@ package git
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"io/ioutil"
+	"os"
 	"os/exec"
 	"path/filepath"
 
@@ -24,9 +26,62 @@ func Build(logger scribe.Logger) packit.BuildFunc {
 	return func(context packit.BuildContext) (packit.BuildResult, error) {
 		logger.Title("%s %s", context.BuildpackInfo.Name, context.BuildpackInfo.Version)
 
+		envCredentials := GitCredential{}
+		gitUserName, userNameExists := os.LookupEnv("GIT_CREDENTIALS_USERNAME")
+		gitPassword, passwordExists := os.LookupEnv("GIT_CREDENTIALS_PASSWORD")
+		if userNameExists && len(gitUserName) > 0 && passwordExists && len(gitPassword) > 0 {
+			logger.Process("Using environment variables GIT_CREDENTIALS_USERNAME and GIT_CREDENTIALS_PASSWORD")
+
+			envCredentials = GitCredential{
+				Username: gitUserName,
+				Password: gitPassword,
+			}
+
+			configuration, err := ReadConfiguration(context.CNBPath)
+			if err != nil {
+				return packit.BuildResult{}, err
+			}
+
+			gitProtocol, protocolExists := os.LookupEnv("GIT_CREDENTIALS_PROTOCOL")
+			if protocolExists && len(gitProtocol) > 0 {
+				envCredentials.Protocol = gitProtocol
+			} else {
+				envCredentials.Protocol = configuration.DefaultProcotol
+			}
+
+			gitHost, hostExists := os.LookupEnv("GIT_CREDENTIALS_HOST")
+			if hostExists && len(gitHost) > 0 {
+				envCredentials.Host = gitHost
+			} else {
+				envCredentials.Host = configuration.DefaultHost
+			}
+
+			gitPath, pathExists := os.LookupEnv("GIT_CREDENTIALS_PATH")
+			if pathExists && len(gitPath) > 0 {
+				envCredentials.Path = gitPath
+			} else {
+				envCredentials.Path = configuration.DefaultPath
+			}
+
+			gitURL, urlExists := os.LookupEnv("GIT_CREDENTIALS_URL")
+			if urlExists && len(gitURL) > 0 {
+				envCredentials.URL = gitURL
+			} else {
+				envCredentials.URL = configuration.DefaultURL
+			}
+		}
+
 		buildPackYML, err := BuildpackYMLParse(filepath.Join(context.WorkingDir, "buildpack.yml"))
-		if err != nil {
+		if err != nil && !os.IsNotExist(err) {
 			return packit.BuildResult{}, err
+		}
+
+		if len(envCredentials.Username) > 0 && len(envCredentials.Password) > 0 {
+			buildPackYML.Credentials = append(buildPackYML.Credentials, envCredentials)
+		}
+
+		if len(buildPackYML.Credentials) == 0 {
+			return packit.BuildResult{}, errors.New("No credentials were specified either in environment variables or in the buildpack.yml")
 		}
 
 		env := BuildEnvironment{

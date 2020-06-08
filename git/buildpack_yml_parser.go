@@ -7,9 +7,9 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-// BuildPackYMLCredential represents a git credentials to be stored in the
-// Git credentials cache
-type BuildPackYMLCredential struct {
+// GitCredential represents GIT credentials to be stored in the GIT credentials
+// cache
+type GitCredential struct {
 	Protocol string `yaml:"protocol"`
 	Host     string `yaml:"host"`
 	Path     string `yaml:"path"`
@@ -20,7 +20,7 @@ type BuildPackYMLCredential struct {
 
 // BuildPackYML represents the buildpack.yml file provided by a user / an app
 type BuildPackYML struct {
-	Credentials []BuildPackYMLCredential `yaml:"credentials,omitempty"`
+	Credentials []GitCredential `yaml:"credentials,omitempty"`
 }
 
 // BuildpackYMLParse parses the buildpack.yml file
