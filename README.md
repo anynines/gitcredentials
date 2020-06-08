@@ -37,8 +37,6 @@ Please read [git-credential](https://git-scm.com/docs/git-credential) to learn m
 
 ### 2. Environment variables
 
-Required:
-
 |  Variable  |  Description  |  Example  |  Required?  |
 |------------|---------------|-----------|-------------|
 |  `$GIT_CREDENTIALS_USERNAME`  |  The username to use during authentication  |  userA  |  yes  |
