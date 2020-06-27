@@ -112,13 +112,24 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 			Expect(result).To(Equal(packit.DetectResult{}))
 		})
 
-		it("returns an error and an empty DetectResult when the buildpack.yml can be parsed but does not contain a gitcredentials map", func() {
+		it("returns an empty BuildPackYml struct when the buildpack.yml can be parsed but does not contain a gitcredentials map", func() {
 			err := ioutil.WriteFile(buildPackYMLPath, []byte("---"), 0644)
 			Expect(err).NotTo(HaveOccurred())
 
 			result, err := detect(packit.DetectContext{WorkingDir: workingDir})
-			Expect(err).To(HaveOccurred())
-			Expect(result).To(Equal(packit.DetectResult{}))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(Equal(packit.DetectResult{
+				Plan: packit.BuildPlan{
+					Provides: []packit.BuildPlanProvision{
+						{Name: "gitcredentials"},
+					},
+					Requires: []packit.BuildPlanRequirement{
+						{
+							Name: "gitcredentials",
+						},
+					},
+				},
+			}))
 		})
 
 		it("returns a DetectResult when the buildpack.yml can be parsed and it contains a gitcredentials map", func() {
