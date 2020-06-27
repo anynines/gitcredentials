@@ -1,7 +1,6 @@
 package git
 
 import (
-	"errors"
 	"os"
 
 	yaml "gopkg.in/yaml.v2"
@@ -43,7 +42,7 @@ func BuildpackYMLParse(path string) (BuildPackYML, error) {
 	}
 
 	if &buildpack.Gitcredentials == nil || len(buildpack.Gitcredentials.Credentials) == 0 {
-		return BuildPackYML{}, errors.New("Item gitcredentials.credentials not found in buildpack.yml")
+		return BuildPackYML{}, nil
 	}
 
 	return buildpack.Gitcredentials, nil
