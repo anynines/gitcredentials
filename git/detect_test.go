@@ -45,7 +45,7 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 			Expect(os.RemoveAll(cnbDir)).To(Succeed())
 		})
 
-		it("returns an error and an empty DetectResult", func() {
+		it("does not participate", func() {
 			result, err := detect(packit.DetectContext{
 				WorkingDir: workingDir,
 				CNBPath:    cnbDir,
@@ -103,7 +103,7 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 			Expect(os.RemoveAll(workingDir)).To(Succeed())
 		})
 
-		it("returns an error and an empty DetectResult when the buildpack.yml cannot be parsed", func() {
+		it("does not participate", func() {
 			err := ioutil.WriteFile(buildPackYMLPath, []byte("\t"), 0644)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -117,19 +117,8 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 			Expect(err).NotTo(HaveOccurred())
 
 			result, err := detect(packit.DetectContext{WorkingDir: workingDir})
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(Equal(packit.DetectResult{
-				Plan: packit.BuildPlan{
-					Provides: []packit.BuildPlanProvision{
-						{Name: "gitcredentials"},
-					},
-					Requires: []packit.BuildPlanRequirement{
-						{
-							Name: "gitcredentials",
-						},
-					},
-				},
-			}))
+			Expect(err).To(HaveOccurred())
+			Expect(result).To(Equal(packit.DetectResult{}))
 		})
 
 		it("returns a DetectResult when the buildpack.yml can be parsed and it contains a gitcredentials map", func() {

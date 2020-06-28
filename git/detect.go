@@ -1,7 +1,6 @@
 package git
 
 import (
-	"errors"
 	"os"
 	"path/filepath"
 
@@ -14,7 +13,7 @@ func Detect(logger scribe.Logger) packit.DetectFunc {
 	return func(context packit.DetectContext) (packit.DetectResult, error) {
 		logger.Title("%s %s", context.BuildpackInfo.Name, context.BuildpackInfo.Version)
 
-		cnbResult := packit.DetectResult{
+		detectResult := packit.DetectResult{
 			Plan: packit.BuildPlan{
 				Provides: []packit.BuildPlanProvision{
 					{Name: "gitcredentials"},
@@ -47,15 +46,17 @@ func Detect(logger scribe.Logger) packit.DetectFunc {
 			pathDefined := (pathExists && len(gitPath) > 0) || len(configuration.DefaultPath) > 0
 
 			if protocolDefined && hostDefined && pathDefined {
-				return cnbResult, nil
+				return detectResult, nil
 			}
 		}
 
-		_, err := BuildpackYMLParse(filepath.Join(context.WorkingDir, "buildpack.yml"))
-		if err == nil {
-			return cnbResult, nil
+		BuildpackYML, err := BuildpackYMLParse(filepath.Join(context.WorkingDir, "buildpack.yml"))
+		if err == nil && len(BuildpackYML.Credentials) > 0 {
+			return detectResult, nil
 		}
 
-		return packit.DetectResult{}, errors.New("Could not find GIT credentials in environment or in buildpack.yml")
+		logger.Subprocess("Not participating: could not find GIT credentials in environment or in buildpack.yml")
+		logger.Break()
+		return packit.DetectResult{}, packit.Fail
 	}
 }
