@@ -45,7 +45,7 @@ func testConfiguration(t *testing.T, context spec.G, it spec.S) {
 			err := ioutil.WriteFile(filepath.Join(cnbDir, "buildpack.toml"), []byte("[buildpack]"), 0644)
 			Expect(err).NotTo(HaveOccurred())
 
-			configuration, err := git.ReadConfiguration(cnbDir)
+			configuration, _ := git.ReadConfiguration(cnbDir)
 			Expect(configuration).To(Equal(git.Configuration{}))
 		})
 

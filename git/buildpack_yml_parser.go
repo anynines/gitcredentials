@@ -41,7 +41,7 @@ func BuildpackYMLParse(path string) (BuildPackYML, error) {
 		}
 	}
 
-	if &buildpack.Gitcredentials == nil || len(buildpack.Gitcredentials.Credentials) == 0 {
+	if len(buildpack.Gitcredentials.Credentials) == 0 {
 		return BuildPackYML{}, nil
 	}
 

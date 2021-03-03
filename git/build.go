@@ -3,6 +3,7 @@ package git
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -251,16 +252,22 @@ func (e BuildEnvironment) StoreCredentials() error {
 			return err
 		}
 
+		ech := make(chan error, 1)
+		defer close(ech)
 		go func() {
 			defer stdin.Close()
-			io.WriteString(stdin, "protocol="+credential.Protocol+"\n")
-			io.WriteString(stdin, "host="+credential.Host+"\n")
-			io.WriteString(stdin, "path="+credential.Path+"\n")
-			io.WriteString(stdin, "username="+credential.Username+"\n")
-			io.WriteString(stdin, "password="+credential.Password+"\n")
+			bf := ""
+			bf += fmt.Sprintf("protocol=" + credential.Protocol + "\n")
+			bf += fmt.Sprintf("host=" + credential.Host + "\n")
+			bf += fmt.Sprintf("path=" + credential.Path + "\n")
+			bf += fmt.Sprintf("username=" + credential.Username + "\n")
+			bf += fmt.Sprintf("password=" + credential.Password + "\n")
 			if credential.URL != "" {
-				io.WriteString(stdin, "url="+credential.URL+"\n")
+				bf += fmt.Sprintf("url=" + credential.URL + "\n")
 			}
+
+			_, err = io.WriteString(stdin, bf)
+			ech <- err
 		}()
 
 		err = cmd.Start()
@@ -287,6 +294,11 @@ func (e BuildEnvironment) StoreCredentials() error {
 		stdoutBytes, err = ioutil.ReadAll(stdout)
 		if err == nil && len(stdoutBytes) > 0 {
 			e.Logger.Subprocess("Command output: %s", string(stdoutBytes))
+		}
+
+		err = <-ech
+		if err != nil {
+			return err
 		}
 
 		err = cmd.Wait()
