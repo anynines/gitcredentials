@@ -12,5 +12,6 @@ func TestUnitGitCredentials(t *testing.T) {
 	suite("Configuration", testConfiguration)
 	suite("BuildpackYMLParser", testBuildpackYMLParser)
 	suite("Detect", testDetect)
+	suite("Build", testBuild)
 	suite.Run(t)
 }
