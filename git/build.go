@@ -109,7 +109,7 @@ func Build(logger scribe.Logger) packit.BuildFunc {
 			return packit.BuildResult{}, err
 		}
 
-		gitCredentialsLayer, err := context.Layers.Get("gitcredentials", packit.LaunchLayer)
+		gitCredentialsLayer, err := context.Layers.Get("gitcredentials")
 		if err != nil {
 			return packit.BuildResult{}, err
 		}
@@ -271,9 +271,6 @@ func (e BuildEnvironment) StoreCredentials() error {
 		}()
 
 		err = cmd.Start()
-		if err != nil {
-			return err
-		}
 
 		if err != nil {
 			e.Logger.Subprocess("Adding credentials failed")
@@ -298,6 +295,7 @@ func (e BuildEnvironment) StoreCredentials() error {
 
 		err = <-ech
 		if err != nil {
+			e.Logger.Subprocess("Failed to write input data to `git credentials approve`")
 			return err
 		}
 
