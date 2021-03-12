@@ -3,7 +3,6 @@ api = "0.2"
 [buildpack]
   id = "com.anynines.buildpacks.gitcredentials"
   name = "GIT credentials"
-  version = "0.0.7"
 
 [metadata]
   include-files = ["bin/build","bin/detect","buildpack.toml"]

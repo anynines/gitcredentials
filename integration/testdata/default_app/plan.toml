@@ -1,0 +1,5 @@
+[[requires]]
+  name = "gitcredentials"
+
+  [requires.metadata]
+    build = true

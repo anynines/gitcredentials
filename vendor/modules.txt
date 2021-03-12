@@ -1,6 +1,9 @@
 # github.com/BurntSushi/toml v0.3.1
 ## explicit
 github.com/BurntSushi/toml
+# github.com/ForestEckhardt/freezer v0.0.6
+github.com/ForestEckhardt/freezer
+github.com/ForestEckhardt/freezer/github
 # github.com/Masterminds/semver v1.5.0
 ## explicit
 # github.com/Masterminds/semver/v3 v3.1.1
@@ -16,12 +19,14 @@ github.com/fatih/color
 github.com/gabriel-vasile/mimetype
 github.com/gabriel-vasile/mimetype/internal/json
 github.com/gabriel-vasile/mimetype/internal/matchers
-# github.com/mattn/go-colorable v0.1.4
+# github.com/mattn/go-colorable v0.1.8
 github.com/mattn/go-colorable
 # github.com/mattn/go-isatty v0.0.12
 github.com/mattn/go-isatty
-# github.com/mattn/go-runewidth v0.0.8
+# github.com/mattn/go-runewidth v0.0.9
 github.com/mattn/go-runewidth
+# github.com/oklog/ulid v1.3.1
+github.com/oklog/ulid
 # github.com/onsi/gomega v1.10.5
 ## explicit
 github.com/onsi/gomega
@@ -36,13 +41,17 @@ github.com/onsi/gomega/matchers/support/goraph/edge
 github.com/onsi/gomega/matchers/support/goraph/node
 github.com/onsi/gomega/matchers/support/goraph/util
 github.com/onsi/gomega/types
+# github.com/paketo-buildpacks/occam v0.1.2
+## explicit
+github.com/paketo-buildpacks/occam
+github.com/paketo-buildpacks/occam/matchers
 # github.com/paketo-buildpacks/packit v0.7.0
 ## explicit
 github.com/paketo-buildpacks/packit
 github.com/paketo-buildpacks/packit/cargo
-github.com/paketo-buildpacks/packit/chronos
 github.com/paketo-buildpacks/packit/fs
 github.com/paketo-buildpacks/packit/internal
+github.com/paketo-buildpacks/packit/pexec
 github.com/paketo-buildpacks/packit/postal
 github.com/paketo-buildpacks/packit/scribe
 github.com/paketo-buildpacks/packit/vacation
@@ -59,7 +68,7 @@ github.com/ulikunitz/xz/lzma
 golang.org/x/net/html
 golang.org/x/net/html/atom
 golang.org/x/net/html/charset
-# golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f
+# golang.org/x/sys v0.0.0-20201018230417-eeed37f84f13
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 # golang.org/x/text v0.3.4
