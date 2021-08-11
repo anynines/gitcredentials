@@ -21,4 +21,10 @@ api = "0.2"
   id = "io.paketo.stacks.tiny"
 
 [[stacks]]
+  id = "heroku-20"
+
+[[stacks]]
+  id = "google"
+
+[[stacks]]
   id = "org.cloudfoundry.stacks.cflinuxfs3"
