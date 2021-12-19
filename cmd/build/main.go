@@ -6,7 +6,7 @@ import (
 	"github.com/paketo-buildpacks/packit"
 	"github.com/paketo-buildpacks/packit/scribe"
 
-	"github.com/avarteqgmbh/gitcredentials/git"
+	"github.com/anynines/gitcredentials/git"
 )
 
 func main() {

@@ -1,4 +1,4 @@
-module github.com/avarteqgmbh/gitcredentials
+module github.com/anynines/gitcredentials
 
 go 1.15
 
