@@ -89,7 +89,7 @@ func testSimpleChecks(t *testing.T, context spec.G, it spec.S) {
 				MatchRegexp(fmt.Sprintf(`%s \d+\.\d+\.\d+`, settings.Buildpack.Name)),
 				"  Using environment variables GIT_CREDENTIALS_USERNAME and GIT_CREDENTIALS_PASSWORD",
 				"  Initializing GIT credentials cache",
-				"    Running command: /usr/bin/git config --global credential.helper cache --timeout 3600",
+				"    Running command: /usr/bin/git config --replace-all --global credential.helper ' cache --timeout 3600 '",
 				"    Command succeeded",
 				"",
 				"  Configuring git to use HTTPs for authentication",

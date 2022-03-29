@@ -171,12 +171,15 @@ func (e BuildEnvironment) Initialize() error {
 	return e.RunGitCommand([]string{
 		"git",
 		"config",
+		"--replace-all",
 		"--global",
 		"credential.helper",
 		strings.Join([]string{
+			"'",
 			"cache",
 			"--timeout",
 			string(defaultTimeout),
+			"'",
 		}, " "),
 	})
 }

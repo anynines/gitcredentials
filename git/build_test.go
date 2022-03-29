@@ -86,15 +86,16 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			},
 			Layers: []packit.Layer{
 				{
-					Path:      "gitcredentials",
-					Name:      "gitcredentials",
-					Build:     false,
-					Launch:    false,
-					Cache:     false,
-					SharedEnv: packit.Environment{},
-					BuildEnv:  packit.Environment{},
-					LaunchEnv: packit.Environment{},
-					Metadata:  nil,
+					Path:             "gitcredentials",
+					Name:             "gitcredentials",
+					Build:            false,
+					Launch:           false,
+					Cache:            false,
+					SharedEnv:        packit.Environment{},
+					BuildEnv:         packit.Environment{},
+					LaunchEnv:        packit.Environment{},
+					ProcessLaunchEnv: map[string]packit.Environment{},
+					Metadata:         nil,
 				},
 			},
 			Launch: packit.LaunchMetadata{Processes: nil, Slices: nil, Labels: nil},
@@ -180,15 +181,16 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			},
 			Layers: []packit.Layer{
 				{
-					Path:      "gitcredentials",
-					Name:      "gitcredentials",
-					Build:     false,
-					Launch:    false,
-					Cache:     false,
-					SharedEnv: packit.Environment{},
-					BuildEnv:  packit.Environment{},
-					LaunchEnv: packit.Environment{},
-					Metadata:  nil,
+					Path:             "gitcredentials",
+					Name:             "gitcredentials",
+					Build:            false,
+					Launch:           false,
+					Cache:            false,
+					SharedEnv:        packit.Environment{},
+					BuildEnv:         packit.Environment{},
+					LaunchEnv:        packit.Environment{},
+					ProcessLaunchEnv: map[string]packit.Environment{},
+					Metadata:         nil,
 				},
 			},
 			Launch: packit.LaunchMetadata{Processes: nil, Slices: nil, Labels: nil},
@@ -265,7 +267,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 				},
 			},
 		})
-		Expect(err).To(MatchError("Near line 0 (last key parsed ''): unexpected end of table name (table names cannot be empty)"))
+		Expect(err.Error()).To(Equal("toml: line 1: unexpected end of table name (table names cannot be empty)"))
 	})
 }
 
