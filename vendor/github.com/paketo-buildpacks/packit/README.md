@@ -125,7 +125,6 @@ func main() {
 		if err != nil {
 			return packit.BuildResult{}, err
 		}
-
 		layer.Build = true
 		layer.Launch = true
 
@@ -206,6 +205,8 @@ the types and functions declared herein.
 
 * [chronos](./chronos): Package chronos provides clock functionality that can be useful when developing and testing Cloud Native Buildpacks.
 
+* [draft](./draft): Package draft provides a service for resolving the priority of buildpack plan entries as well as consilidating build and launch requirements.
+
 * [fakes](./fakes)
 
 * [fs](./fs): Package fs provides a set of filesystem helpers that can be useful when developing Cloud Native Buildpacks.
@@ -222,22 +223,7 @@ the types and functions declared herein.
 
 ## `jam` CLI
 
-The `packit` library comes with a command-line tool called `jam` that can be
-used to create buildpack tarball artifacts. The `jam` name is simply a play on
-the idea of "packaging" or "packing" a buildpack.
-
-The `jam` executable can be installed by downloading the latest version from
-the [Releases](../../releases) page. Once downloaded, buildpacks can be created from
-a source repository using the `pack` command like this:
-
-```sh
-jam pack \
-  --buildpack ./buildpack.toml \
-  --stack io.paketo.stacks.tiny \
-  --version 1.2.3 \
-  --offline \
-  --output ./buildpack.tgz
-```
+The `jam` CLI has been moved into its [own dedicated repository](https://github.com/paketo-buildpacks/jam). For new `jam` releases, please visit the `jam` repositories [release page](https://github.com/paketo-buildpacks/jam/releases).
 
 ---
 Readme created from Go doc with [goreadme](https://github.com/posener/goreadme)
