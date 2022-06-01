@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/anynines/gitcredentials/git"
-	"github.com/paketo-buildpacks/packit"
-	"github.com/paketo-buildpacks/packit/scribe"
+	"github.com/paketo-buildpacks/packit/v2"
+	"github.com/paketo-buildpacks/packit/v2/scribe"
 	"github.com/sclevine/spec"
 
 	. "github.com/onsi/gomega"
@@ -75,14 +75,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(result).To(Equal(packit.BuildResult{
 			Plan: packit.BuildpackPlan{
-				Entries: []packit.BuildpackPlanEntry{
-					{
-						Name: "rvm-bundler",
-						Metadata: map[string]interface{}{
-							"version": "0.0.x",
-						},
-					},
-				},
+				Entries: nil,
 			},
 			Layers: []packit.Layer{
 				{
@@ -170,14 +163,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(result).To(Equal(packit.BuildResult{
 			Plan: packit.BuildpackPlan{
-				Entries: []packit.BuildpackPlanEntry{
-					{
-						Name: "rvm-bundler",
-						Metadata: map[string]interface{}{
-							"version": "0.0.x",
-						},
-					},
-				},
+				Entries: nil,
 			},
 			Layers: []packit.Layer{
 				{

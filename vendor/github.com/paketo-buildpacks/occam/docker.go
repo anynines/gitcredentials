@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/paketo-buildpacks/packit/pexec"
+	"github.com/paketo-buildpacks/packit/v2/pexec"
 )
 
 type Docker struct {
@@ -26,6 +26,8 @@ type Docker struct {
 	Volume struct {
 		Remove DockerVolumeRemove
 	}
+
+	Pull DockerPull
 }
 
 func NewDocker() Docker {
@@ -47,6 +49,8 @@ func NewDocker() Docker {
 
 	docker.Volume.Remove = DockerVolumeRemove{executable: executable}
 
+	docker.Pull = DockerPull{executable: executable}
+
 	return docker
 }
 
@@ -62,6 +66,8 @@ func (d Docker) WithExecutable(executable Executable) Docker {
 	d.Container.Stop.executable = executable
 
 	d.Volume.Remove.executable = executable
+
+	d.Pull.executable = executable
 
 	return d
 }
@@ -107,13 +113,16 @@ type DockerContainerRun struct {
 	inspect    DockerContainerInspect
 
 	command      string
+	commandArgs  []string
+	direct       bool
+	entrypoint   string
 	env          map[string]string
 	memory       string
-	tty          bool
-	entrypoint   string
-	publishPorts []string
+	network      string
 	publishAll   bool
-	volume       string
+	publishPorts []string
+	tty          bool
+	volumes      []string
 }
 
 func (r DockerContainerRun) WithEnv(env map[string]string) DockerContainerRun {
@@ -128,6 +137,16 @@ func (r DockerContainerRun) WithMemory(memoryLimit string) DockerContainerRun {
 
 func (r DockerContainerRun) WithCommand(command string) DockerContainerRun {
 	r.command = command
+	return r
+}
+
+func (r DockerContainerRun) WithCommandArgs(commandArgs []string) DockerContainerRun {
+	r.commandArgs = commandArgs
+	return r
+}
+
+func (r DockerContainerRun) WithDirect() DockerContainerRun {
+	r.direct = true
 	return r
 }
 
@@ -151,8 +170,19 @@ func (r DockerContainerRun) WithPublishAll() DockerContainerRun {
 	return r
 }
 
+// Deprecated: Use WithVolumes(...volumes) instead.
 func (r DockerContainerRun) WithVolume(volume string) DockerContainerRun {
-	r.volume = volume
+	r.volumes = append(r.volumes, volume)
+	return r
+}
+
+func (r DockerContainerRun) WithVolumes(volumes ...string) DockerContainerRun {
+	r.volumes = append(r.volumes, volumes...)
+	return r
+}
+
+func (r DockerContainerRun) WithNetwork(network string) DockerContainerRun {
+	r.network = network
 	return r
 }
 
@@ -194,15 +224,24 @@ func (r DockerContainerRun) Execute(imageID string) (Container, error) {
 		args = append(args, "--entrypoint", r.entrypoint)
 	}
 
-	if r.volume != "" {
-		args = append(args, "--volume", r.volume)
+	if r.network != "" {
+		args = append(args, "--network", r.network)
+	}
+
+	for _, volume := range r.volumes {
+		args = append(args, "--volume", volume)
 	}
 
 	args = append(args, imageID)
 
+	if r.direct {
+		args = append(args, "--")
+	}
+
 	if r.command != "" {
 		args = append(args, r.command)
 	}
+	args = append(args, r.commandArgs...)
 
 	stdout := bytes.NewBuffer(nil)
 	stderr := bytes.NewBuffer(nil)
@@ -310,6 +349,24 @@ func (r DockerVolumeRemove) Execute(volumes []string) error {
 	})
 	if err != nil {
 		return fmt.Errorf("failed to remove docker volume: %w: %s", err, strings.TrimSpace(stderr.String()))
+	}
+
+	return nil
+}
+
+type DockerPull struct {
+	executable Executable
+}
+
+func (p DockerPull) Execute(image string) error {
+
+	stderr := bytes.NewBuffer(nil)
+	err := p.executable.Execute(pexec.Execution{
+		Args:   []string{"pull", image},
+		Stderr: stderr,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to pull docker image: %w: %s", err, strings.TrimSpace(stderr.String()))
 	}
 
 	return nil

@@ -2,13 +2,17 @@ package occam
 
 import (
 	"encoding/json"
+	"fmt"
+	"net/url"
+	"os"
 	"strings"
 )
 
 type Container struct {
-	ID    string
-	Ports map[string]string
-	Env   map[string]string
+	ID          string
+	Ports       map[string]string
+	Env         map[string]string
+	IPAddresses map[string]string
 }
 
 func NewContainerFromInspectOutput(output []byte) (Container, error) {
@@ -21,6 +25,9 @@ func NewContainerFromInspectOutput(output []byte) (Container, error) {
 			Ports map[string][]struct {
 				HostPort string `json:"HostPort"`
 			} `json:"Ports"`
+			Networks map[string]struct {
+				IPAddress string `json:"IPAddress"`
+			} `json:"Networks"`
 		} `json:"NetworkSettings"`
 	}
 
@@ -48,9 +55,39 @@ func NewContainerFromInspectOutput(output []byte) (Container, error) {
 		}
 	}
 
+	if len(inspect[0].NetworkSettings.Networks) > 0 {
+		container.IPAddresses = make(map[string]string)
+		for networkName, network := range inspect[0].NetworkSettings.Networks {
+			container.IPAddresses[networkName] = network.IPAddress
+		}
+	}
+
 	return container, nil
 }
 
 func (c Container) HostPort(value string) string {
 	return c.Ports[value]
+}
+
+func (c Container) Host() string {
+	val, ok := os.LookupEnv("DOCKER_HOST")
+	if !ok || strings.HasPrefix(val, "unix://") {
+		return "localhost"
+	}
+
+	url, err := url.Parse(val)
+	if err != nil {
+		return "localhost"
+	}
+
+	return url.Hostname()
+}
+
+func (c Container) IPAddressForNetwork(networkName string) (string, error) {
+	ipAddress, ok := c.IPAddresses[networkName]
+	if !ok {
+		return "", fmt.Errorf("invalid network name: %s", networkName)
+	}
+
+	return ipAddress, nil
 }
