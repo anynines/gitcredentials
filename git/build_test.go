@@ -75,14 +75,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(result).To(Equal(packit.BuildResult{
 			Plan: packit.BuildpackPlan{
-				Entries: []packit.BuildpackPlanEntry{
-					{
-						Name: "rvm-bundler",
-						Metadata: map[string]interface{}{
-							"version": "0.0.x",
-						},
-					},
-				},
+				Entries: nil,
 			},
 			Layers: []packit.Layer{
 				{
@@ -170,14 +163,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(result).To(Equal(packit.BuildResult{
 			Plan: packit.BuildpackPlan{
-				Entries: []packit.BuildpackPlanEntry{
-					{
-						Name: "rvm-bundler",
-						Metadata: map[string]interface{}{
-							"version": "0.0.x",
-						},
-					},
-				},
+				Entries: nil,
 			},
 			Layers: []packit.Layer{
 				{

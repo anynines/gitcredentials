@@ -119,7 +119,6 @@ func Build(logger scribe.Logger) packit.BuildFunc {
 		gitCredentialsLayer.Launch = false
 
 		return packit.BuildResult{
-			Plan: context.Plan,
 			Layers: []packit.Layer{
 				gitCredentialsLayer,
 			},
