@@ -5,9 +5,10 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/ForestEckhardt/freezer/github"
-	"github.com/paketo-buildpacks/packit/vacation"
+	"github.com/paketo-buildpacks/packit/v2/vacation"
 )
 
 //go:generate faux --interface GitReleaseFetcher --output fakes/git_release_fetcher.go
@@ -45,6 +46,11 @@ func NewRemoteFetcher(buildpackCache BuildpackCache, gitReleaseFetcher GitReleas
 	}
 }
 
+func (r RemoteFetcher) WithPackager(packager Packager) RemoteFetcher {
+	r.packager = packager
+	return r
+}
+
 func (r RemoteFetcher) Get(buildpack RemoteBuildpack) (string, error) {
 	release, err := r.gitReleaseFetcher.Get(buildpack.Org, buildpack.Repo)
 	if err != nil {
@@ -74,8 +80,9 @@ func (r RemoteFetcher) Get(buildpack RemoteBuildpack) (string, error) {
 	}
 
 	path := cachedEntry.URI
+	tagName := strings.TrimPrefix(release.TagName, "v")
 
-	if release.TagName != cachedEntry.Version || !exist {
+	if tagName != cachedEntry.Version || !exist {
 		missingReleaseArtifacts := !(len(release.Assets) > 0)
 		var bundle io.ReadCloser
 		if missingReleaseArtifacts || buildpack.Offline {
@@ -90,7 +97,7 @@ func (r RemoteFetcher) Get(buildpack RemoteBuildpack) (string, error) {
 			}
 		}
 
-		path = filepath.Join(buildpackCacheDir, fmt.Sprintf("%s.tgz", release.TagName))
+		path = filepath.Join(buildpackCacheDir, fmt.Sprintf("%s.tgz", tagName))
 
 		if missingReleaseArtifacts || buildpack.Offline {
 			downloadDir, err := r.fileSystem.TempDir("", buildpack.Repo)
@@ -99,12 +106,12 @@ func (r RemoteFetcher) Get(buildpack RemoteBuildpack) (string, error) {
 			}
 			defer os.RemoveAll(downloadDir)
 
-			err = vacation.NewTarGzipArchive(bundle).StripComponents(1).Decompress(downloadDir)
+			err = vacation.NewArchive(bundle).StripComponents(1).Decompress(downloadDir)
 			if err != nil {
 				return "", err
 			}
 
-			err = r.packager.Execute(downloadDir, path, release.TagName, buildpack.Offline)
+			err = r.packager.Execute(downloadDir, path, tagName, buildpack.Offline)
 			if err != nil {
 				return "", err
 			}
@@ -123,7 +130,7 @@ func (r RemoteFetcher) Get(buildpack RemoteBuildpack) (string, error) {
 		}
 
 		err = r.buildpackCache.Set(key, CacheEntry{
-			Version: release.TagName,
+			Version: tagName,
 			URI:     path,
 		})
 

@@ -2,22 +2,24 @@ package occam
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/ForestEckhardt/freezer"
 	"github.com/ForestEckhardt/freezer/github"
+	"github.com/paketo-buildpacks/occam/packagers"
 )
 
 //go:generate faux --interface LocalFetcher --output fakes/local_fetcher.go
 type LocalFetcher interface {
+	WithPackager(packager freezer.Packager) freezer.LocalFetcher
 	Get(freezer.LocalBuildpack) (string, error)
 }
 
 //go:generate faux --interface RemoteFetcher --output fakes/remote_fetcher.go
 type RemoteFetcher interface {
+	WithPackager(packager freezer.Packager) freezer.RemoteFetcher
 	Get(freezer.RemoteBuildpack) (string, error)
 }
 
@@ -38,8 +40,8 @@ func NewBuildpackStore() BuildpackStore {
 	gitToken := os.Getenv("GIT_TOKEN")
 	cacheManager := freezer.NewCacheManager(filepath.Join(os.Getenv("HOME"), ".freezer-cache"))
 	releaseService := github.NewReleaseService(github.NewConfig("https://api.github.com", gitToken))
-	packager := freezer.NewPackingTools()
-	fileSystem := freezer.NewFileSystem(ioutil.TempDir)
+	packager := packagers.NewJam()
+	fileSystem := freezer.NewFileSystem(os.MkdirTemp)
 	namer := freezer.NewNameGenerator()
 
 	return BuildpackStore{
@@ -71,6 +73,12 @@ func (bs BuildpackStore) WithRemoteFetcher(fetcher RemoteFetcher) BuildpackStore
 
 func (bs BuildpackStore) WithCacheManager(manager CacheManager) BuildpackStore {
 	bs.Get.cacheManager = manager
+	return bs
+}
+
+func (bs BuildpackStore) WithPackager(packager freezer.Packager) BuildpackStore {
+	bs.Get.local = bs.Get.local.WithPackager(packager)
+	bs.Get.remote = bs.Get.remote.WithPackager(packager)
 	return bs
 }
 
