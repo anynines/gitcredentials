@@ -1,7 +1,10 @@
 api = "0.8"
 
 [buildpack]
+  description = "A buildpack that allows an app developer to supply credentials for GIT repositories which require authentication"
+  homepage = "https://github.com/anynines/gitcredentials"
   id = "anynines/gitcredentials"
+  keywords = ["git", "credentials"]
   name = "GIT credentials"
 
 [metadata]
