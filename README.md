@@ -75,7 +75,7 @@ Configuration for this build package can be specfied in [buildpack.toml](./build
 
 ## Authors
 
-* [Khaled Blah](https://github.com/khaledavarteq), [anynines GmbH](https://github.com/anynines)
+* [Khaled Blah](https://github.com/khaledavarteq), [Eugene Bykov](https://github.com/ybykov-a9s), [anynines GmbH](https://github.com/anynines)
 
 ## LICENSE
 

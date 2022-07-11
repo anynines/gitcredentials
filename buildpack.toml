@@ -7,6 +7,10 @@ api = "0.8"
   keywords = ["git", "credentials"]
   name = "GIT credentials"
 
+  [[buildpack.licenses]]
+    type = "MIT License"
+    uri = "https://github.com/anynines/gitcredentials/blob/main/LICENSE"
+
 [metadata]
   include-files = ["bin/build","bin/detect","buildpack.toml"]
   pre-package = "./scripts/build.sh"
