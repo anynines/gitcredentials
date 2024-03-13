@@ -9,7 +9,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 
 	"github.com/paketo-buildpacks/packit/v2"
 	"github.com/paketo-buildpacks/packit/v2/scribe"
@@ -163,22 +162,13 @@ func (e BuildEnvironment) RunGitCommand(args []string) error {
 // memory exclusively
 func (e BuildEnvironment) Initialize() error {
 	e.Logger.Process("Initializing GIT credentials cache")
-	defaultTimeout := "3600"
-	if len(e.Configuration.DefaultTimeout) > 0 {
-		defaultTimeout = e.Configuration.DefaultTimeout
-	}
 	return e.RunGitCommand([]string{
 		"git",
 		"config",
 		"--replace-all",
 		"--global",
 		"credential.helper",
-		strings.Join([]string{
-			"'",
-			strings.Join([]string{"cache", "--timeout", string(defaultTimeout)}, " "),
-			"'",
-		},
-			""),
+		"cache",
 	})
 }
 

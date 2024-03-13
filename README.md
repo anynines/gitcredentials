@@ -59,7 +59,6 @@ Configuration for this build package can be specfied in [buildpack.toml](./build
 
 |  Name  |  Description  |  Default value  |
 |------------|---------------|-----------|
-|  default_timeout  |  The default timeout for the GIT credential cache in seconds, set to "3600" to support builds which run longer  |  "3600"  |
 |  default_protocol  |  The default protocol. Currently only https is supported. Used as value for `$GIT_CREDENTIALS_PROTOCOL` if the environment variable is not specified  |  "https"  |
 |  default_host  |  The default host (don't we all use GitHub ;-)). Used as value for `$GIT_CREDENTIALS_HOST` if the environment variable is not specified |  "github.com"  |
 |  default_path  |  The default path. The path variable allows you to authenticate to different repos using different Git credential. Used as value for `$GIT_CREDENTIALS_PATH` if the environment variable is not specified  |  "/"  |

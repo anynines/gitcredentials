@@ -17,7 +17,6 @@ api = "0.8"
   pre-package = "./scripts/build.sh"
 
   [metadata.configuration]
-    default_timeout = "3600"
     default_protocol = "https"
     default_host = "github.com"
     default_path = "/"
