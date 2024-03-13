@@ -175,11 +175,10 @@ func (e BuildEnvironment) Initialize() error {
 		"credential.helper",
 		strings.Join([]string{
 			"'",
-			"cache",
-			"--timeout",
-			string(defaultTimeout),
+			strings.Join([]string{"cache", "--timeout", string(defaultTimeout)}, " "),
 			"'",
-		}, " "),
+		},
+			""),
 	})
 }
 

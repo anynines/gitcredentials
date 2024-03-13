@@ -6,6 +6,7 @@ api = "0.8"
   id = "anynines/gitcredentials"
   keywords = ["git", "credentials"]
   name = "GIT credentials"
+  version = "{{.version}}"
 
   [[buildpack.licenses]]
     type = "MIT License"
